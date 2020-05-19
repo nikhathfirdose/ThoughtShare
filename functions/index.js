@@ -78,15 +78,22 @@ app.post("/signup", (req, res) => {
     handle: req.body.handle,
   };
   // validate user - checks if user handle is unique or no
-
-  //signimg up
-  firebase
-    .auth()
-    .createUserWithEmailAndPassword(newUser.email, newUser.password)
+  db.doc(`/users/${newUser.handle}`)
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        return res.status(400).json({ handle: "this handle is already taken" });
+      } else {
+        return firebase
+          .auth()
+          .createUserWithEmailAndPassword(newUser.email, newUser.password);
+      }
+    })
     .then((data) => {
-      return res
-        .status(201)
-        .json({ message: `user ${data.user.uid} signed in successfully` });
+      return data.user.getIdToken();
+    })
+    .then((token) => {
+      return res.status(201).json({ token });
     })
     .catch((err) => {
       console.error(err);
