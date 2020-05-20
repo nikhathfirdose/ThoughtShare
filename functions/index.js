@@ -36,18 +36,61 @@ app.get("/thoughts", (req, res) => {
       });
       return res.json(thoughts);
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
 });
-app.post("/thought", (req, res) => {
+const FBAuth = (req, res, next) => {
+  let idToken;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
+    idToken = req.headers.authorization.split("Bearer ")[1];
+  } else {
+    console.error("No token found");
+    return res.status(403).json({ error: `Unauthorized` });
+  }
+  admin
+    .auth()
+    .verifyIdToken(idToken)
+    .then((decodedToken) => {
+      req.user = decodedToken;
+      console.log(decodedToken);
+      return db
+        .collection("users")
+        .where("userId", "==", req.user.uid)
+        .limit(1)
+        .get();
+    })
+    .then((data) => {
+      req.user.handle = data.docs[0].data().handle;
+      return next();
+    })
+    .catch((err) => {
+      console.error("Error while verifying token", err);
+      return res.status(403).json(err);
+    });
+};
+
+//post one thought
+//FBAuth is used coz not every user must be allowed in, we verify it first and then let in,
+// ie it checks for only the users whose id is present in our database "users" if true they only get to post their thoughts
+app.post("/thought", FBAuth, (req, res) => {
+  if (req.body.body.trim() === "") {
+    return res.status(400).json({ body: "Body must not be empty" });
+  }
+
   const userThoughts = {
     body: req.body.body,
-    userHandle: req.body.userHandle,
+    userHandle: req.user.handle, //changed coz middle ware is authenticated now, so user.handle takes in from our own collection
     createdAt: new Date().toISOString(),
   };
   db.collection("thoughts")
     .add(userThoughts)
     .then((doc) => {
-      res.json({ mesaage: `Document ${doc.id} created sucessfully` });
+      res.json({ message: `Document ${doc.id} created sucessfully` });
     })
     .catch((err) => {
       res.status(500).json({ error: `something is wrong` });
@@ -168,11 +211,9 @@ app.post("/login", (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.code === "auth/wrong-password") {
-        return res
-          .status(403)
-          .json({
-            general: "Incorrect password/Credentials. Please try again",
-          });
+        return res.status(403).json({
+          general: "Incorrect password/Credentials. Please try again",
+        });
       } else {
         return res.status(500).json({ error: err.code });
       }
