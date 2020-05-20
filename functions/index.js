@@ -167,8 +167,18 @@ app.post("/login", (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).json({ error: err.code });
+      if (err.code === "auth/wrong-password") {
+        return res
+          .status(403)
+          .json({
+            general: "Incorrect password/Credentials. Please try again",
+          });
+      } else {
+        return res.status(500).json({ error: err.code });
+      }
     });
 });
 //one api multiple routes
 exports.api = functions.region("asia-east2").https.onRequest(app); //this one on requst can work on multiple paths, this was done by express and it helps in creating a container for all routes
+//403- unauthorized
+//201- server enter success
