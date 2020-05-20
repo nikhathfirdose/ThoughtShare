@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const express = require("express");
-const app = express(); //app is our container for all routes ==== to const app = require("express")();
+const app = require("express")();
+// const app = express(); //app is our container for all routes ==== to const app = require("express")();
 admin.initializeApp(); //we aint passing app coz, it knows where to load ==
 
 const firebaseConfig = {
@@ -14,19 +14,10 @@ const firebaseConfig = {
   appId: "1:750082543278:web:a7986c833ca574e764273f",
   measurementId: "G-15944FPSBE",
 };
-const firebase = require("firebase"); //alll these require data is been installed as a package in the functions cd - npm insatall --save blah
+const firebase = require("firebase"); //all these require data is been installed as a package in the functions cd - npm insatall --save blah
 firebase.initializeApp(firebaseConfig);
-// // // Create and Deploy Your First Cloud Functions
-// // // https://firebase.google.com/docs/functions/write-firebase-functions
-// //
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   response.send("Hello from Firebase!");
-// });
 
-// exports.getThoughts = functions.https.onRequest((req, res) => {
-
-// });
-//this .get methods is creating routes
+//.get methods is creating routes
 
 const db = admin.firestore(); // changing all admin.firestore to db now
 app.get("/thoughts", (req, res) => {
@@ -41,18 +32,12 @@ app.get("/thoughts", (req, res) => {
           userHandle: doc.data().userHandle,
           body: doc.data().body,
           createdAt: doc.data().createdAt,
-        }); //just doc is a reference. (.data() gives the data in that  referece)
+        }); //just doc is a reference. (.data() gives the data in that referece)
       });
       return res.json(thoughts);
     })
     .catch((err) => console.error(err));
 });
-
-// we need not manually set if !=post as express handles that for us
-//so below lineswont be needed
-// if (req.method !== "POST") {
-//     return res.status(400).json({ error: `Select POST method` });
-//   }
 app.post("/thought", (req, res) => {
   const userThoughts = {
     body: req.body.body,
@@ -77,12 +62,14 @@ app.post("/signup", (req, res) => {
     confirmPassword: req.body.confirmPassword,
     handle: req.body.handle,
   };
-  // validate user - checks if user handle is unique or no
+  let token, userId;
+  //   // validate user - checks if user handle is unique or no - this is done by checking the "users collection of db. we check if it has that handle or new user has come from below code"
+
   db.doc(`/users/${newUser.handle}`)
     .get()
     .then((doc) => {
       if (doc.exists) {
-        return res.status(400).json({ handle: "this handle is already taken" });
+        return res.status(400).json({ handle: "This handle is already taken" });
       } else {
         return firebase
           .auth()
@@ -90,14 +77,29 @@ app.post("/signup", (req, res) => {
       }
     })
     .then((data) => {
+      userId = data.user.uid;
       return data.user.getIdToken();
     })
-    .then((token) => {
+    .then((idToken) => {
+      token = idToken;
+      const userCredentials = {
+        handle: newUser.handle,
+        email: newUser.email,
+        createdAt: new Date().toISOString(),
+        userId,
+      };
+      db.doc(`/users/${newUser.handle}`).set(userCredentials);
+    })
+    .then(() => {
       return res.status(201).json({ token });
     })
     .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err.code });
+      console.error;
+      if (err.code === "auth/email-already-in-use") {
+        return res.status(400).json({ email: "Email already in use" });
+      } else {
+        return res.status(500).json({ error: err.code });
+      }
     });
 });
 
