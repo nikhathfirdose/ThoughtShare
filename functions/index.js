@@ -5,7 +5,13 @@ const app = require("express")();
 const FBAuth = require("./util/fbAuth");
 
 const { getAllThoughts, postOneThought } = require("./handlers/thoughts");
-const { signUp, login, uploadImage } = require("./handlers/users");
+const {
+  signUp,
+  login,
+  uploadImage,
+  addUserDetails,
+  getAuthenticatedUser,
+} = require("./handlers/users");
 
 //.get methods is creating routes
 //Thought Routes
@@ -16,6 +22,8 @@ app.post("/thought", FBAuth, postOneThought);
 app.post("/signup", signUp);
 app.post("/login", login);
 app.post("/user/image", FBAuth, uploadImage);
+app.post("/user", FBAuth, addUserDetails);
+app.get("/user", FBAuth, getAuthenticatedUser);
 
 //one api multiple routes
 exports.api = functions.region("asia-east2").https.onRequest(app); //this one on requst can work on multiple paths, this was done by express and it helps in creating a container for all routes
