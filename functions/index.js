@@ -4,7 +4,11 @@ const app = require("express")();
 // const app = express(); //app is our container for all routes ==== to const app = require("express")();
 const FBAuth = require("./util/fbAuth");
 
-const { getAllThoughts, postOneThought } = require("./handlers/thoughts");
+const {
+  getAllThoughts,
+  postOneThought,
+  getThought,
+} = require("./handlers/thoughts");
 const {
   signUp,
   login,
@@ -17,6 +21,12 @@ const {
 //Thought Routes
 app.get("/thoughts", getAllThoughts);
 app.post("/thought", FBAuth, postOneThought);
+app.get("/thought/:thoughtId", getThought);
+//todo:
+//delete thought
+//like a thought
+//unlike a thought
+//comment on thought
 
 //User routes
 app.post("/signup", signUp);

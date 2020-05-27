@@ -1,13 +1,5 @@
 let myDb = {
-  thoughts: [
-    {
-      userHandle: "user",
-      body: "somethoing",
-      createdAt: "2020-05-19T12:16:38.552Z",
-      likeCount: 5,
-      commentCount: 2,
-    },
-  ],
+  
   users: [
     {
       userId: "djkfhdjvfdhvhfgkshgk",
@@ -20,6 +12,24 @@ let myDb = {
       location: "UK",
     },
   ],
+  thoughts: [
+    {
+      userHandle: "user",
+      body: "somethoing",
+      createdAt: "2020-05-19T12:16:38.552Z",
+      likeCount: 5,
+      commentCount: 2,
+    },
+  ],
+  comments: [
+    {
+      userHandle: "user",
+      thoughtId: "jcjhdsgfdhvkncbknvbkfg",
+      body: "nice pic deaaa",
+      createdAt: "2020-05-19T12:16:38.552Z"
+    }
+
+  ]
 };
 const userDetails = {
   credentials: {

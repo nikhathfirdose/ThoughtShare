@@ -42,3 +42,32 @@ exports.postOneThought = (req, res) => {
       console.error(err);
     });
 };
+
+exports.getThought = (req, res) => {
+  let thoughtData = {};
+  db.doc(`/thoughts/${req.params.thoughtId}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: `Thought not found` });
+      }
+      thoughtData = doc.data();
+      thoughtData.thoughtId = doc.id;
+      return db
+        .collection("comments")
+        .orderBy("createdAt", "desc")
+        .where("thoughtId", "==", req.params.thoughtId)
+        .get();
+    })
+    .then((data) => {
+      thoughtData.comments = [];
+      data.forEach((doc) => {
+        thoughtData.comments.push(doc.data());
+      });
+      return res.json(thoughtData);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
