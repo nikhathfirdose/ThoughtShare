@@ -31,6 +31,7 @@ exports.postOneThought = (req, res) => {
     body: req.body.body,
     userHandle: req.user.handle, //changed coz middle ware is authenticated now, so user.handle takes in from our own collection
     createdAt: new Date().toISOString(),
+    // userImage: req.user.I
   };
   db.collection("thoughts")
     .add(userThoughts)
@@ -69,5 +70,35 @@ exports.getThought = (req, res) => {
     .catch((err) => {
       console.error(err);
       return res.status(500).json({ error: err.code });
+    });
+};
+//Comment on a post
+exports.commentOnThought = (req, res) => {
+  if (req.body.body.trim() === "")
+    return res.status(400).json({ error: "Must not be Empty!" });
+
+  const newComment = {
+    body: req.body.body,
+    userHandle: req.user.handle,
+    thoughtId: req.params.thoughtId,
+    createdAt: new Date().toISOString(),
+    userImage: req.user.imageUrl,
+  };
+  //check if screa exists
+  db.doc(`/thoughts/${req.params.thoughtId}`)
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: `Thought not found` });
+      }
+      return db.collection("comments").add(newComment);
+    })
+
+    .then(() => {
+      res.json(newComment);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ error: `Something went wrong` });
     });
 };

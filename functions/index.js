@@ -8,6 +8,7 @@ const {
   getAllThoughts,
   postOneThought,
   getThought,
+  commentOnThought,
 } = require("./handlers/thoughts");
 const {
   signUp,
@@ -27,6 +28,7 @@ app.get("/thought/:thoughtId", getThought);
 //like a thought
 //unlike a thought
 //comment on thought
+app.post("/thought/:thoughtId/comment", FBAuth, commentOnThought);
 
 //User routes
 app.post("/signup", signUp);
